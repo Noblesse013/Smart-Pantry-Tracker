@@ -11,6 +11,7 @@ export default function Home() {
       flexDirection={"column"}
       alignItems={"center"}
     >
+    <Box  border={'1px solid grey'}>
     <Box marginBottom={1} width="500px" height="100px" bgcolor={"lightblue"}  border={"20px"} display={"flex"} justifyContent={"center"} alignItems={"center"}>
     <Typography 
               variant={"h4"}
@@ -21,7 +22,7 @@ export default function Home() {
      </Typography>
    
       </Box> 
-      <Stack width="500px" height="350px" spacing={1} overflow={'auto'} border={'1px solid grey'}>
+      <Stack width="500px" height="350px" spacing={1} overflow={'auto'}>
 
         {item.map((i) => (
           <Box
@@ -46,6 +47,7 @@ export default function Home() {
             </Typography>
           </Box>  
         ))}</Stack>
+        </Box>
     </Box>
 
 
