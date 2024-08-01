@@ -142,12 +142,12 @@ export default function Home() {
       >
         <TextField
           id="search"
-          label="Search Pantry"
+          label="Looking for something?"
           variant="outlined"
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           fullWidth
-          sx={{ bgcolor: '#fff', borderRadius: '4px' }}
+          sx={{ bgcolor: '#fff', borderRadius: '14px' }}
         />
         <Button 
           variant="contained" 
