@@ -1,285 +1,283 @@
 "use client";
+import { Box, Stack, Typography, Button, TextField, Modal } from "@mui/material";
+import { firestore } from "@/firebase";
+import { collection, getDocs, query, doc, setDoc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
 
-import { Box, Stack, Typography, Button, Modal, TextField } from '@mui/material';
-import { firestore } from '@/firebase'; // Make sure the alias is set up correctly in jsconfig.json
-import { collection, doc, getDocs, query, setDoc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-
-const modalStyle = {
+const style = {
   position: 'absolute',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: '90%',
-  maxWidth: 500,
-  bgcolor: '#f8c6c6;',
-  border: '2px solid  #f8c6c6;', // Bold border
-  borderRadius: '3px',
+  width: '100%',
+  maxWidth: 400,
+  bgcolor: '#FFC0CB',
+  border: '2px solid #000',
   boxShadow: 24,
   p: 4,
   display: 'flex',
   flexDirection: 'column',
   gap: 3,
-};
-
-const containerStyle = {
-  width: '90%',
-  maxWidth: '900px',
-  minHeight: '90vh',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  
-  alignItems: 'center',
-  gap: 5,
-  mx: 'auto',
-  p: 2,
-};
-
-const headerStyle = {
-  width: '100%',
-  maxWidth: '800px',
-  bgcolor: '#f5f5f5',
-  border: '2px solid  #f8c6c6;', // Bold border
   borderRadius: '8px',
-  p: 2,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
 };
 
-const itemStyle = {
-  width: 'calc(100% - 100px)', // Responsive width minus button width
-  height: '50px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  bgcolor: '#f8c6c6',
-  borderRadius: '8px',
-  border: '2px solid #000', // Bold border
-  p: 2,
+const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
 export default function Home() {
-  const [pantryList, setPantry] = useState([]);
+  const [pantry, setPantryList] = useState([]);
   const [open, setOpen] = useState(false);
-  const [itemName, setItemName] = useState('');
-  const [editItem, setEditItem] = useState('');
-  const [newQuantity, setNewQuantity] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [itemName, setItemName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPantry, setFilteredPantry] = useState([]);
+  const [isClient, setIsClient] = useState(false);
 
   const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setItemName('');
-    setEditItem('');
-    setNewQuantity(0);
-    setOpen(false);
+  const handleClose = () => setOpen(false);
+
+  const updatePantry = async () => {
+    const q = query(collection(firestore, "pantry"));
+    const querySnapshot = await getDocs(q);
+    const pantryList = [];
+    querySnapshot.forEach((doc) => {
+      pantryList.push({ name: doc.id, count: doc.data().count });
+    });
+    setPantryList(pantryList);
+    setFilteredPantry(pantryList);
   };
 
   useEffect(() => {
+    setIsClient(true);
     updatePantry();
   }, []);
 
-  const updatePantry = async () => {
-    try {
-      const q = query(collection(firestore, 'pantry'));
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        quantity: doc.data().quantity || 0
-      }));
-      setPantry(items);
-    } catch (error) {
-      console.error("Error fetching pantry items: ", error);
-    }
-  };
-
   const addItem = async (item) => {
     try {
-      const docRef = doc(collection(firestore, 'pantry'), item);
+      const normalizedItem = item.toLowerCase();
+      const docRef = doc(collection(firestore, 'pantry'), normalizedItem);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        // Item exists, update quantity
         await updateDoc(docRef, {
-          quantity: (docSnap.data().quantity || 0) + 1
+          count: docSnap.data().count + 1
         });
       } else {
-        // Item does not exist, create with quantity 1
-        await setDoc(docRef, { quantity: 1 });
+        await setDoc(docRef, { count: 1 });
       }
 
       updatePantry();
+      handleClose();
     } catch (error) {
-      console.error("Error adding item: ", error);
+      console.error("Error adding document: ", error);
     }
   };
 
   const removeItem = async (item) => {
     try {
-      const docRef = doc(collection(firestore, 'pantry'), item);
+      const docRef = doc(collection(firestore, 'pantry'), item.name.toLowerCase());
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const currentQuantity = docSnap.data().quantity || 0;
-
-        if (currentQuantity > 1) {
-          // Reduce quantity
-          await updateDoc(docRef, { quantity: currentQuantity - 1 });
+        const currentCount = docSnap.data().count;
+        if (currentCount > 1) {
+          await updateDoc(docRef, {
+            count: currentCount - 1
+          });
         } else {
-          // Delete item if quantity is 0
           await deleteDoc(docRef);
         }
-
-        updatePantry();
       }
-    } catch (error) {
-      console.error("Error removing item: ", error);
-    }
-  };
 
-  const changeQuantity = async (item, newQuantity) => {
-    try {
-      const docRef = doc(collection(firestore, 'pantry'), item);
-      await updateDoc(docRef, { quantity: newQuantity });
       updatePantry();
     } catch (error) {
-      console.error("Error changing quantity: ", error);
+      console.error("Error removing document: ", error);
     }
   };
 
-  const filteredPantryList = pantryList.filter(item =>
-    item.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query === "") {
+      setFilteredPantry(pantry);
+    } else {
+      const filtered = pantry.filter(item => item.name.includes(query.toLowerCase()));
+      setFilteredPantry(filtered);
+    }
+  };
+
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (itemName.trim() !== "") {
+      addItem(itemName);
+      setItemName("");
+    }
+  };
+
+  if (!isClient) {
+    return null;
+  }
 
   return (
-    <Box sx={containerStyle}>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+    <Box
+      width="100vw"
+      height="100vh"
+      display={'flex'}
+      justifyContent={'center'}
+      flexDirection={'column'}
+      alignItems={'center'}
+      gap={2}
+      bgcolor={'#FFEBEF'}
+      p={2}
+      pt={16}
+      pb={18}
+    >
+      <Box 
+        display="flex" 
+        flexDirection="column" 
+        alignItems="center" 
+        gap={2} 
+        width="100%" 
+        maxWidth="600px"
+        mb={2}
       >
-        <Box sx={modalStyle}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            {editItem ? 'Change Quantity' : 'Add Items'}
-          </Typography>
-          {editItem ? (
-            <Stack width="100%" direction="row" spacing={2}>
-              <TextField
-                id="quantity-input"
-                label="New Quantity"
-                type="number"
-                variant="outlined"
-                fullWidth
-                value={newQuantity}
-                onChange={(e) => setNewQuantity(Number(e.target.value))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    changeQuantity(editItem, newQuantity);
-                    handleClose();
-                  }
-                }}
-              />
-              <Button
-                variant="contained"
-                onClick={() => {
-                  changeQuantity(editItem, newQuantity);
-                  handleClose();
-                }}
-              >
-                Confirm
-              </Button>
-            </Stack>
-          ) : (
-            <Stack width="100%" direction="row" spacing={2}>
-              <TextField
-                id="outlined-basic"
-                label="Item"
-                variant="outlined"
-                fullWidth
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    addItem(itemName);
-                    handleClose();
-                  }
-                }}
-              />
-              <Button
-                variant="contained"
-                onClick={() => {
-                  addItem(itemName);
-                  handleClose();
-                }}
-              >
-                Add
-              </Button>
-            </Stack>
-          )}
-        </Box>
-      </Modal>
-
-      <Stack width="100%" maxWidth="800px" direction="row" spacing={2} mb={2}>
         <TextField
-          id="search-input"
-          label="Search"
+          id="search"
+          label="Search Pantry"
           variant="outlined"
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
           fullWidth
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ bgcolor: '#fff', borderRadius: '4px' }}
         />
-         <Button variant="contained" onClick={handleOpen} bgcolor="#f8c4e9">
-        Add Items
-      </Button>
-      </Stack>
-      <Box sx={headerStyle}>
-        <Typography variant="h4" color="#333" textAlign="center">
-          Pantry Items
-        </Typography>
+        <Button 
+          variant="contained" 
+          onClick={handleOpen} 
+          sx={{ 
+            bgcolor: '#FF69B4', 
+            '&:hover': { bgcolor: '#FF1493' },
+            color: '#fff',
+            fontWeight: 'bold',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            fontSize: '0.75rem',
+            padding: '4px 8px',
+            mt: 0.5
+          }}
+        >
+          Add New Items
+        </Button>
       </Box>
-
-      <Stack
-        width="100%"
-        maxWidth="800px"
-        spacing={2}
-        sx={{
-          maxHeight: '500px', // Limit height for scroll
-          overflowY: 'auto', // Enable vertical scroll
-          borderLeft: '16px dotted #ffffff', 
-          p: 2, // Padding for better appearance
-        }}
+      <Box 
+        borderLeft="9px dotted grey"
+        width="100%" 
+        maxWidth="500px" 
+ 
+        boxShadow={'0 4px 8px rgba(0, 0, 0, 0.1)'} 
+        mt={2}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
       >
-        {filteredPantryList.map((item) => (
-          <Stack
-            key={item.id}
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Box sx={itemStyle}>
-              <Typography variant="h5" color="common.white">
-                {item.id.charAt(0).toUpperCase() + item.id.slice(1)} ({item.quantity})
-              </Typography>
-            </Box>
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" onClick={() => {
-                setEditItem(item.id);
-                setNewQuantity(item.quantity);
-                handleOpen();
-  
-              }}>
-                Update
-              </Button>
-              <Button variant="contained" color= "error" onClick={() => removeItem(item.id)}>
+        <Box
+          width="100%"
+          height="60px"
+          bgcolor={'#FFB6C1'}
+          display={'flex'}
+          justifyContent={'center'}
+          alignItems={'center'}
+          borderBottom={'1px solid #333'}
+          sx={{ borderRadius: '6px 6px 0 0' }}
+        >
+          <Typography variant={'h5'} color={'#333'} textAlign={'center'} fontWeight={'bold'} >
+            Pantry Tracker
+          </Typography>
+        </Box>
+        <Stack
+          width="100%"
+          height="300px"
+          spacing={2}
+          overflowY={'auto'}
+          padding={2}
+        >
+          {filteredPantry.length > 0 ? filteredPantry.map((item) => (
+            <Box
+              key={item.name}
+              width="100%"
+              display={'flex'}
+              justifyContent={'space-between'}
+              alignItems={'center'}
+              bgcolor={'#f8f8f8'}
+              border={'1px solid #ccc'}
+              borderRadius={4}
+              p={2}
+              boxShadow={'0 2px 4px rgba(0, 0, 0, 0.1)'}
+              maxWidth="90%"
+              mx="auto"
+            >
+              <Box display={'flex'} flexDirection={'column'} justifyContent={'center'}>
+                <Typography variant={'h6'} color={'#333'} fontWeight={'bold'}>
+                  {capitalizeFirstLetter(item.name)}
+                </Typography>
+                <Typography variant={'body2'} color={'#666'}>
+                  Quantity: {item.count}
+                </Typography>
+              </Box>
+              <Button 
+                variant="contained" 
+                color="secondary" 
+                onClick={() => removeItem(item)} 
+                sx={{
+                  bgcolor: '#FFB6C1',
+                  '&:hover': { bgcolor: '#FF69B4' },
+                  padding: '4px 8px',
+                  fontSize: '0.875rem',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                }}
+              >
                 Remove
               </Button>
-            </Stack>
-          </Stack>
-        ))}
-      </Stack>
+            </Box>
+          )) : (
+            <Typography variant={'h6'} color={'#333'} textAlign={'center'} fontWeight={'bold'}>
+              Your Pantry is Empty
+            </Typography>
+          )}
+        </Stack>
+      </Box>
+
+      <Modal open={open} onClose={handleClose}>
+        <Box sx={style}>
+          <Typography variant="h6" component="h2" textAlign="center">
+            Add Item
+          </Typography>
+          <TextField
+            label="Item Name"
+            variant="outlined"
+            value={itemName}
+            onChange={(e) => setItemName(e.target.value)}
+            fullWidth
+          />
+          <Button
+            variant="contained"
+            onClick={handleAddItem}
+            sx={{
+              bgcolor: '#FF69B4',
+              '&:hover': { bgcolor: '#FF1493' },
+              color: '#fff',
+              fontWeight: 'bold',
+              borderRadius: '8px',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+              fontSize: '0.875rem',
+              padding: '8px 16px',
+            }}
+          >
+            Add
+          </Button>
+        </Box>
+      </Modal>
     </Box>
   );
 }
