@@ -168,7 +168,6 @@ export default function Home() {
         </Button>
       </Box>
       <Box 
-        borderLeft="9px dotted grey"
         width="100%" 
         maxWidth="500px" 
  
