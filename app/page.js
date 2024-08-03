@@ -152,7 +152,7 @@ export default function Home() {
               mr: 2 
             }}
           >
-            Your Pantry Tracker
+            Smart Pantry Tracker
           </Typography>
           <Fastfood fontSize="large" color="primary" />
         </Box>
@@ -201,7 +201,7 @@ export default function Home() {
           <Stack spacing={2}>
             {filteredInventory.length === 0 ? (
               <Typography variant="h6" color="textSecondary" align="center">
-                No items found.
+                Your pantry is empty.
               </Typography>
             ) : (
               filteredInventory.map(({ name, quantity }) => (
