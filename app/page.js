@@ -112,18 +112,18 @@ export default function Home() {
   const theme = createTheme({
     palette: {
       primary: {
-        main: '#8e24aa', // Violet color
+        main: '#8B4513', // SaddleBrown
       },
       secondary: {
-        main: '#ba68c8', // Lighter violet color
+        main: '#A0522D', // Sienna
       },
       background: {
-        default: '#f3e5f5',
+        default: '#FAF0E6', // Linen
       },
     },
   });
 
-  const backgroundImageUrl = 'https://source.unsplash.com/featured/?pantry'; // URL for pantry-themed background
+  const backgroundImageUrl = 'https://www.popularwoodworking.com/review/wp-content/uploads/2023/12/iStock-1453229786-1024x751.jpg'; // URL for pantry-themed background
 
   return (
     <ThemeProvider theme={theme}>
@@ -143,11 +143,18 @@ export default function Home() {
           backgroundColor: theme.palette.background.default 
         }}
       >
-        <Box display="flex" alignItems="center" mb={2}>
-          <Fastfood fontSize="large" color="primary" sx={{ mr: 1 }} /> {/* Food icon */}
-          <Typography variant="h3" color="primary">
+        <Box display="flex" alignItems="center" mb={2} sx={{ textAlign: 'center' }}>
+          <Typography 
+            variant="h3" 
+            color="white"
+            sx={{ 
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.6)', 
+              mr: 2 
+            }}
+          >
             Your Pantry Tracker
           </Typography>
+          <Fastfood fontSize="large" color="primary" />
         </Box>
         <Grid container spacing={2} mb={2} width="100%" maxWidth="800px">
           <Grid item xs={12} sm={8}>
@@ -157,6 +164,7 @@ export default function Home() {
               placeholder="Search for an item"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
+              sx={{ backgroundColor: 'white' }}
             />
           </Grid>
           <Grid item xs={12} sm={2}>
