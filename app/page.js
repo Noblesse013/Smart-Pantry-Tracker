@@ -160,17 +160,33 @@ export default function Home() {
             />
           </Grid>
           <Grid item xs={12} sm={2}>
-            <Button variant="contained" color="primary" fullWidth onClick={() => handleOpen()}>
-              Add Item
-            </Button>
+            <Box height="100%">
+              <Button 
+                variant="contained" 
+                color="primary" 
+                fullWidth 
+                sx={{ height: '100%' }} 
+                onClick={() => handleOpen()}
+              >
+                Add Item
+              </Button>
+            </Box>
           </Grid>
           <Grid item xs={12} sm={2}>
-            <Button variant="contained" color="secondary" fullWidth onClick={() => {
-              fetchRecipes();
-              handleRecipesOpen();
-            }}>
-              Get Recipes
-            </Button>
+            <Box height="100%">
+              <Button 
+                variant="contained" 
+                color="secondary" 
+                fullWidth 
+                sx={{ height: '100%' }} 
+                onClick={() => {
+                  fetchRecipes();
+                  handleRecipesOpen();
+                }}
+              >
+                Get Recipes
+              </Button>
+            </Box>
           </Grid>
         </Grid>
         <Paper elevation={3} sx={{ width: '100%', maxWidth: '800px', p: 3 }}>
@@ -183,7 +199,7 @@ export default function Home() {
               filteredInventory.map(({ name, quantity }) => (
                 <Paper key={name} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="h6">{name.charAt(0).toUpperCase() + name.slice(1)}</Typography>
-                  <Typography variant="h6"> Amount: {quantity}</Typography>
+                  <Typography variant="h6">Amount: {quantity}</Typography>
                   <Box>
                     <Button
                       variant="outlined"
@@ -277,6 +293,7 @@ export default function Home() {
     </ThemeProvider>
   );
 }
+
 // 'use client'
 // import { useState, useEffect } from 'react';
 // import { firestore } from '@/firebase';
