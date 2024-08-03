@@ -183,7 +183,7 @@ export default function Home() {
               filteredInventory.map(({ name, quantity }) => (
                 <Paper key={name} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="h6">{name.charAt(0).toUpperCase() + name.slice(1)}</Typography>
-                  <Typography variant="h6">{quantity}</Typography>
+                  <Typography variant="h6"> Amount: {quantity}</Typography>
                   <Box>
                     <Button
                       variant="outlined"
