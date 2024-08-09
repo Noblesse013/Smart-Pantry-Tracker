@@ -7,10 +7,9 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Fastfood, Book } from '@mui/icons-material'; // Import the food and book icons
 import axios from 'axios';
 
-
-const EDAMAM_APP_ID = process.env.NEXT_PUBLIC_EDAMAM_APP_ID;
-const EDAMAM_APP_KEY = process.env.NEXT_PUBLIC_EDAMAM_APP_KEY;
-
+// Replace this with your actual Edamam API credentials
+const EDAMAM_APP_ID = 'your_app_id';
+const EDAMAM_APP_KEY = 'your_app_key';
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
@@ -59,7 +58,13 @@ export default function Home() {
     }
 
     const docRef = doc(collection(firestore, 'inventory'), item);
-    await setDoc(docRef, { quantity: parseInt(quantity) }, { merge: true });
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      await setDoc(docRef, { quantity: parseInt(quantity) });
+    } else {
+      await setDoc(docRef, { quantity: parseInt(quantity) });
+    }
     await updateInventory();
   };
 
@@ -263,7 +268,11 @@ export default function Home() {
                 variant='contained'
                 color='primary'
                 onClick={() => {
-                  addItem(itemName, itemQuantity);
+                  if (isUpdate) {
+                    addItem(itemName, itemQuantity);
+                  } else {
+                    addItem(itemName, itemQuantity);
+                  }
                   handleClose();
                 }}
               >
