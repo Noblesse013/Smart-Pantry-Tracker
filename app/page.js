@@ -1,15 +1,14 @@
-'use client'
+'use client';
 import { useState, useEffect } from 'react';
 import { firestore } from '@/firebase';
-import { Box, Modal, Typography, Stack, TextField, Button, Paper, List, ListItem, ListItemText, Grid, Link } from '@mui/material';
-import { collection, getDocs, query, setDoc, getDoc, deleteDoc, doc } from 'firebase/firestore';
+import { Box, Modal, Typography, Stack, TextField, Button, Paper, List, ListItem, ListItemText, Grid, Link, IconButton } from '@mui/material';
+import { collection, getDocs, query, setDoc, deleteDoc, doc } from 'firebase/firestore';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Fastfood, Book } from '@mui/icons-material'; // Import the food and book icons
+import { Kitchen, Book, Delete, Edit } from '@mui/icons-material';
 import axios from 'axios';
 
-// Replace this with your actual Edamam API credentials
-const EDAMAM_APP_ID = 'your_app_id';
-const EDAMAM_APP_KEY = 'your_app_key';
+const EDAMAM_APP_ID = process.env.NEXT_PUBLIC_EDAMAM_APP_ID;
+const EDAMAM_APP_KEY = process.env.NEXT_PUBLIC_EDAMAM_APP_KEY;
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
@@ -58,13 +57,7 @@ export default function Home() {
     }
 
     const docRef = doc(collection(firestore, 'inventory'), item);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      await setDoc(docRef, { quantity: parseInt(quantity) });
-    } else {
-      await setDoc(docRef, { quantity: parseInt(quantity) });
-    }
+    await setDoc(docRef, { quantity: parseInt(quantity) }, { merge: true });
     await updateInventory();
   };
 
@@ -131,7 +124,7 @@ export default function Home() {
     },
   });
 
-  const backgroundImageUrl = 'https://www.popularwoodworking.com/review/wp-content/uploads/2023/12/iStock-1453229786-1024x751.jpg'; // URL for pantry-themed background
+  const backgroundImageUrl = 'https://bienalclosets.com/wp-content/uploads/2023/09/small_pantry_in_a_kitchen_corner.jpg';
 
   return (
     <ThemeProvider theme={theme}>
@@ -142,13 +135,13 @@ export default function Home() {
         flexDirection="column"
         justifyContent="center"
         alignItems="center"
-        gap={4}
         p={3}
         sx={{ 
           backgroundImage: `url(${backgroundImageUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundColor: theme.palette.background.default 
+          backgroundColor: theme.palette.background.default,
+          overflowY: 'auto'
         }}
       >
         <Box display="flex" alignItems="center" mb={2} sx={{ textAlign: 'center' }}>
@@ -157,13 +150,14 @@ export default function Home() {
             color="white"
             sx={{ 
               textShadow: '2px 2px 4px rgba(0, 0, 0, 0.6)', 
-              mr: 2 
+              mr: 1 
             }}
           >
-            Smart Pantry Tracker
+            Welcome to Smart Pantry Tracker
           </Typography>
-          <Fastfood fontSize="large" color="primary" />
+          <Kitchen fontSize="large" sx={{ color: '#cf6d6d' }} />
         </Box>
+
         <Grid container spacing={2} mb={2} width="100%" maxWidth="800px">
           <Grid item xs={12} sm={8}>
             <TextField
@@ -176,35 +170,32 @@ export default function Home() {
             />
           </Grid>
           <Grid item xs={12} sm={2}>
-            <Box height="100%">
-              <Button 
-                variant="contained" 
-                color="primary" 
-                fullWidth 
-                sx={{ height: '100%' }} 
-                onClick={() => handleOpen()}
-              >
-                Add Item
-              </Button>
-            </Box>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              fullWidth 
+              sx={{ height: '100%' }} 
+              onClick={() => handleOpen()}
+            >
+              Add Item
+            </Button>
           </Grid>
           <Grid item xs={12} sm={2}>
-            <Box height="100%">
-              <Button 
-                variant="contained" 
-                color="secondary" 
-                fullWidth 
-                sx={{ height: '100%' }} 
-                onClick={() => {
-                  fetchRecipes();
-                  handleRecipesOpen();
-                }}
-              >
-                Get Recipes
-              </Button>
-            </Box>
+            <Button 
+              variant="contained" 
+              color="secondary" 
+              fullWidth 
+              sx={{ height: '100%' }} 
+              onClick={() => {
+                fetchRecipes();
+                handleRecipesOpen();
+              }}
+            >
+              Get Recipes
+            </Button>
           </Grid>
         </Grid>
+
         <Paper elevation={3} sx={{ width: '100%', maxWidth: '800px', p: 3 }}>
           <Stack spacing={2}>
             {filteredInventory.length === 0 ? (
@@ -213,31 +204,44 @@ export default function Home() {
               </Typography>
             ) : (
               filteredInventory.map(({ name, quantity }) => (
-                <Paper key={name} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6">{name.charAt(0).toUpperCase() + name.slice(1)}</Typography>
+                <Paper 
+                  key={name} 
+                  sx={{ 
+                    p: 2, 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    flexDirection: { xs: 'column', sm: 'row' }, 
+                    gap: 2,
+                    wordWrap: 'break-word',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'translateY(-5px)' } 
+                  }}
+                >
+                  <Typography variant="h6" sx={{ wordWrap: 'break-word', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                    {name.charAt(0).toUpperCase() + name.slice(1)}
+                  </Typography>
                   <Typography variant="h6">Amount: {quantity}</Typography>
-                  <Box>
-                    <Button
-                      variant="outlined"
-                      color="primary"
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <IconButton 
+                      color="primary" 
                       onClick={() => handleOpen(name, quantity)}
-                      sx={{ mr: 1 }}
                     >
-                      Update
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
+                      <Edit />
+                    </IconButton>
+                    <IconButton 
+                      color="secondary" 
                       onClick={() => removeItem(name)}
                     >
-                      Delete
-                    </Button>
+                      <Delete />
+                    </IconButton>
                   </Box>
                 </Paper>
               ))
             )}
           </Stack>
         </Paper>
+
         <Modal open={open} onClose={handleClose}>
           <Box
             position="absolute"
@@ -268,19 +272,23 @@ export default function Home() {
                 variant='contained'
                 color='primary'
                 onClick={() => {
-                  if (isUpdate) {
-                    addItem(itemName, itemQuantity);
-                  } else {
-                    addItem(itemName, itemQuantity);
-                  }
+                  addItem(itemName, itemQuantity);
                   handleClose();
                 }}
               >
                 {isUpdate ? 'Update Item' : 'Add Item'}
               </Button>
+              <Button
+                variant='outlined'
+                color='secondary'
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
             </Stack>
           </Box>
         </Modal>
+
         <Modal open={recipesOpen} onClose={handleRecipesClose}>
           <Box
             position="absolute"
@@ -288,28 +296,28 @@ export default function Home() {
             left="50%"
             sx={{ transform: "translate(-50%, -50%)", width: '90%', maxWidth: 600, bgcolor: "background.paper", borderRadius: 1, boxShadow: 24, p: 4 }}
           >
-            <Typography variant="h6" color="textPrimary" mb={2} display="flex" alignItems="center">
-              <Book fontSize="small" sx={{ mr: 1 }} />
+            <Typography variant="h6" color="textPrimary" mb={2}>
               Recipe Suggestions
             </Typography>
-            {error && (
-              <Typography variant="body1" color="error" mb={2}>
+            {error ? (
+              <Typography variant="body1" color="error">
                 {error}
               </Typography>
-            )}
-            <List>
-              {recipes.length === 0 ? (
-                <Typography variant="body1">No recipes found.</Typography>
-              ) : (
-                recipes.map((recipe) => (
-                  <ListItem key={recipe.uri}>
-                    <ListItemText
-                      primary={<Link href={recipe.url} target="_blank" rel="noopener noreferrer">{recipe.label}</Link>}
+            ) : (
+              <List>
+                {recipes.map((recipe, index) => (
+                  <ListItem key={index} divider>
+                    <ListItemText 
+                      primary={recipe.label} 
+                      secondary={<Link href={recipe.url} target="_blank" rel="noopener noreferrer">{recipe.url}</Link>} 
                     />
                   </ListItem>
-                ))
-              )}
-            </List>
+                ))}
+              </List>
+            )}
+            <Button variant='outlined' color='secondary' onClick={handleRecipesClose}>
+              Close
+            </Button>
           </Box>
         </Modal>
       </Box>
