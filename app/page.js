@@ -6,10 +6,11 @@ import { collection, getDocs, query, setDoc, getDoc, deleteDoc, doc } from 'fire
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Fastfood, Book } from '@mui/icons-material'; // Import the food and book icons
 import axios from 'axios';
-import Header from './Header'; // Import the Header component
+
 
 const EDAMAM_APP_ID = process.env.NEXT_PUBLIC_EDAMAM_APP_ID;
 const EDAMAM_APP_KEY = process.env.NEXT_PUBLIC_EDAMAM_APP_KEY;
+
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
@@ -58,7 +59,7 @@ export default function Home() {
     }
 
     const docRef = doc(collection(firestore, 'inventory'), item);
-    await setDoc(docRef, { quantity: parseInt(quantity) });
+    await setDoc(docRef, { quantity: parseInt(quantity) }, { merge: true });
     await updateInventory();
   };
 
@@ -129,7 +130,6 @@ export default function Home() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Header />
       <Box
         width="100vw"
         height="100vh"
@@ -263,11 +263,7 @@ export default function Home() {
                 variant='contained'
                 color='primary'
                 onClick={() => {
-                  if (isUpdate) {
-                    addItem(itemName, itemQuantity);
-                  } else {
-                    addItem(itemName, itemQuantity);
-                  }
+                  addItem(itemName, itemQuantity);
                   handleClose();
                 }}
               >
