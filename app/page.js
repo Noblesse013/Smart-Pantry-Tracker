@@ -218,10 +218,10 @@ export default function Home() {
                     '&:hover': { transform: 'translateY(-5px)' } 
                   }}
                 >
-                  <Typography variant="h6" sx={{ wordWrap: 'break-word', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                  <Typography variant="h6" >
                     {name.charAt(0).toUpperCase() + name.slice(1)}
                   </Typography>
-                  <Typography variant="h6">Amount: {quantity}</Typography>
+                  <Typography variant="h1" sx={{ wordWrap: 'break-word', fontSize: { xs: '1rem', sm: '1.25rem' } }}>Amount: {quantity}</Typography>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <IconButton 
                       color="primary" 
